@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NEWAPP · Singapore Education Programmes</title>
+<meta name="description" content="Explore Singapore education programmes by pathway, level and subject.">
+<style>
+:root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172033;background:#f6f8fc}
+*{box-sizing:border-box}body{margin:0}.wrap{max-width:1120px;margin:auto;padding:28px 20px}
+.hero{background:#172033;color:white;border-radius:24px;padding:42px 32px;margin:18px 0 28px}
+.hero h1{font-size:clamp(32px,6vw,58px);margin:0 0 12px}.hero p{color:#cbd5e1;max-width:680px;font-size:17px;line-height:1.6}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.card{background:white;border:1px solid #e4e9f2;border-radius:18px;padding:22px;cursor:pointer;transition:.2s}
+.card:hover{transform:translateY(-2px);box-shadow:0 10px 30px #17203312}.card h3{margin:0 0 7px}.muted{color:#64748b}
+.section{margin:28px 0}.pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#eef2ff;color:#334155;font-size:12px;margin:3px}
+#levels{display:none}.top{display:flex;justify-content:space-between;gap:12px;align-items:center}
+button{border:0;border-radius:10px;padding:9px 13px;background:#172033;color:white;cursor:pointer}
+footer{padding:35px 0;color:#64748b;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero">
+<div class="pill">NEWAPP</div>
+<h1>Singapore Education Programmes</h1>
+<p>Explore programmes by education pathway, level and subject. Curriculum and syllabus information will be progressively added and versioned.</p>
+</header>
+
+<section class="section">
+<div class="top"><h2>Choose an education pathway</h2></div>
+<div id="frameworks" class="grid"><p class="muted">Loading...</p></div>
+</section>
+
+<section id="levels" class="section">
+<div class="top"><h2 id="levelTitle">Levels</h2><button onclick="showFrameworks()">Back</button></div>
+<div id="levelGrid" class="grid"></div>
+</section>
+
+<footer>NEWAPP · Independent education programme catalogue · Not affiliated with MOE/SEAB.</footer>
+</div>
+<script>
+const SUPABASE_URL="https://givcabheseeeiwmahwbj.supabase.co";
+const SUPABASE_KEY="__PUBLISHABLE_KEY__";
+async function api(table,query=""){
+ const r=await fetch(SUPABASE_URL+"/rest/v1/"+table+"?"+query,{headers:{apikey:SUPABASE_KEY,Authorization:"Bearer "+SUPABASE_KEY}});
+ if(!r.ok) throw new Error(await r.text()); return r.json();
+}
+async function load(){
+ const box=document.getElementById("frameworks");
+ try{
+  const data=await api("curriculum_frameworks","select=id,code,name,description,sort_order&order=sort_order");
+  box.innerHTML=data.map(x=>`<article class="card" onclick="showLevels('${x.id}','${escapeHtml(x.name)}')"><h3>${escapeHtml(x.name)}</h3><p class="muted">${escapeHtml(x.description||"")}</p></article>`).join("");
+ }catch(e){box.innerHTML='<p class="muted">Database connection is ready, but the public API key still needs to be configured.</p>';}
+}
+async function showLevels(id,name){
+ document.getElementById("frameworks").parentElement.style.display="none";
+ document.getElementById("levels").style.display="block";
+ document.getElementById("levelTitle").textContent=name;
+ const box=document.getElementById("levelGrid");
+ try{
+  const data=await api("education_levels","select=id,code,name,level_group,sort_order&framework_id=eq."+encodeURIComponent(id)+"&order=sort_order");
+  box.innerHTML=data.map(x=>`<article class="card"><h3>${escapeHtml(x.name)}</h3><span class="pill">${escapeHtml(x.level_group)}</span></article>`).join("")||'<p class="muted">No levels added yet.</p>';
+ }catch(e){box.innerHTML='<p class="muted">Unable to load levels.</p>';}
+}
+function showFrameworks(){document.getElementById("levels").style.display="none";document.getElementById("frameworks").parentElement.style.display="block";}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));}
+load();
+</script>
+</body>
+</html>
