@@ -83,7 +83,7 @@ async function openLevel(id,name,code){
 async function openSubject(id,name){
  state.subject={id,name};showOnly("syllabusSection");document.getElementById("syllabusTitle").innerHTML="4 · "+esc(name);document.getElementById("syllabuses").innerHTML='<p class="muted">Loading...</p>';
  try{
-  const data=await api("syllabuses","select=id,code,title,qualification,syllabus_year,source_authority,notes&subject_level_id=in.(select%20id%20from%20subject_levels%20where%20subject_id.eq."+encodeURIComponent(id)+"%20and%20level_id.eq."+encodeURIComponent(state.level.id)+")&is_active=eq.true&order=syllabus_year.desc,code");
+  const data=await api("syllabuses","select=id,code,title,qualification,syllabus_year,source_authority,notes,subject_levels!inner(subject_id,level_id)&subject_levels.subject_id=eq."+encodeURIComponent(id)+"&subject_levels.level_id=eq."+encodeURIComponent(state.level.id)+"&is_active=eq.true&order=syllabus_year.desc,code");
   document.getElementById("syllabuses").innerHTML=data.map(x=>'<article class="card" onclick="openSyllabus(\''+x.id+'\',\''+esc(x.title)+'\')"><h3>'+esc(x.title)+'</h3><span class="badge">'+esc(x.qualification||"Curriculum")+'</span> <span class="badge">'+esc(x.syllabus_year||"Current")+'</span><p class="muted small">'+esc(x.notes||"")+'</p><span class="tag">Source: '+esc(x.source_authority||"")+'</span></article>').join("")||'<div class="empty">This subject has no versioned syllabus record yet. The subject mapping is already ready for future syllabus updates.</div>';
  }catch(e){document.getElementById("syllabuses").innerHTML='<div class="empty">Unable to load syllabus records.</div>'}
 }
