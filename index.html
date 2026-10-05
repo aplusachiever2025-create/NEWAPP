@@ -76,10 +76,17 @@ async function openFramework(id,name){
 async function openLevel(id,name,code){
  state.level={id,name,code};showOnly("subjectSection");document.getElementById("subjectTitle").innerHTML="3 · "+esc(name);document.getElementById("subjects").innerHTML='<p class="muted">Loading...</p>';
  try{
-  const data=await api("subject_levels","select=id,subject_id,subjects(id,code,name,short_name,category)&level_id=eq."+encodeURIComponent(id)+"&is_active=eq.true&order=subject_id");
-  const seen=new Set(),rows=data.filter(x=>x.subjects&&!seen.has(x.subjects.id)&&seen.add(x.subjects.id));
-  document.getElementById("subjects").innerHTML=rows.map(x=>'<article class="card" onclick="openSubject(\''+x.subjects.id+'\',\''+esc(x.subjects.name)+'\')"><h3>'+esc(x.subjects.name)+'</h3><span class="badge">'+esc(x.subjects.category||"Academic")+'</span></article>').join("")||'<div class="empty">No subjects mapped to this level yet.</div>';
- }catch(e){document.getElementById("subjects").innerHTML='<div class="empty">Unable to load subjects.</div>'}
+  // Load the mapping table and subject catalogue separately. This avoids nested PostgREST
+  // relation/RLS responses hiding the subject object even when the mapping rows exist.
+  const mappings=await api("subject_levels","select=id,subject_id&level_id=eq."+encodeURIComponent(id)+"&is_active=eq.true&order=subject_id");
+  const ids=[...new Set(mappings.map(x=>x.subject_id).filter(Boolean))];
+  if(!ids.length){
+   document.getElementById("subjects").innerHTML='<div class="empty">No subjects mapped to this level yet.</div>';
+   return;
+  }
+  const data=await api("subjects","select=id,code,name,short_name,category&is_active=eq.true&id=in.("+ids.join(",")+")&order=name");
+  document.getElementById("subjects").innerHTML=data.map(x=>'<article class="card" onclick="openSubject(\\''+x.id+'\\',\\''+esc(x.name)+'\\')"><h3>'+esc(x.name)+'</h3><span class="badge">'+esc(x.category||"Academic")+'</span></article>').join("")||'<div class="empty">No active subjects found.</div>';
+ }catch(e){console.error("Subject loading failed:",e);document.getElementById("subjects").innerHTML='<div class="empty">Unable to load subjects. Please refresh and try again.</div>'}
 }
 async function openSubject(id,name){
  state.subject={id,name};showOnly("syllabusSection");document.getElementById("syllabusTitle").innerHTML="4 · "+esc(name);document.getElementById("syllabuses").innerHTML='<p class="muted">Loading...</p>';
