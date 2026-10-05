@@ -1,71 +1,102 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>NEWAPP · Singapore Education Programmes</title>
-<meta name="description" content="Explore Singapore education programmes by pathway, level and subject.">
+<meta name="description" content="Explore Singapore education programmes by pathway, level, subject and syllabus.">
 <style>
 :root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172033;background:#f6f8fc}
-*{box-sizing:border-box}body{margin:0}.wrap{max-width:1120px;margin:auto;padding:28px 20px}
-.hero{background:#172033;color:white;border-radius:24px;padding:42px 32px;margin:18px 0 28px}
-.hero h1{font-size:clamp(32px,6vw,58px);margin:0 0 12px}.hero p{color:#cbd5e1;max-width:680px;font-size:17px;line-height:1.6}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
-.card{background:white;border:1px solid #e4e9f2;border-radius:18px;padding:22px;cursor:pointer;transition:.2s}
-.card:hover{transform:translateY(-2px);box-shadow:0 10px 30px #17203312}.card h3{margin:0 0 7px}.muted{color:#64748b}
-.section{margin:28px 0}.pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#eef2ff;color:#334155;font-size:12px;margin:3px}
-#levels{display:none}.top{display:flex;justify-content:space-between;gap:12px;align-items:center}
-button{border:0;border-radius:10px;padding:9px 13px;background:#172033;color:white;cursor:pointer}
+*{box-sizing:border-box}body{margin:0}.wrap{max-width:1180px;margin:auto;padding:22px 18px}
+.hero{background:#172033;color:#fff;border-radius:26px;padding:38px 30px;margin:10px 0 24px}.hero h1{font-size:clamp(32px,6vw,58px);line-height:1.03;margin:10px 0}.hero p{color:#cbd5e1;max-width:760px;font-size:17px;line-height:1.65}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.card{background:#fff;border:1px solid #e4e9f2;border-radius:18px;padding:21px;cursor:pointer;transition:.2s}.card:hover{transform:translateY(-2px);box-shadow:0 12px 32px #17203314}.card h3{margin:0 0 8px}.muted{color:#64748b;line-height:1.55}.small{font-size:13px}.section{margin:25px 0}.top{display:flex;justify-content:space-between;gap:12px;align-items:center}.crumbs{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 18px}.crumb{padding:6px 10px;background:#e9eef8;border-radius:999px;font-size:12px;color:#334155}
+.badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#eef2ff;color:#334155;font-size:12px;margin:2px}.tag{display:inline-block;padding:5px 8px;border-radius:8px;background:#f1f5f9;color:#475569;font-size:11px;margin:3px 3px 0 0}
+button{border:0;border-radius:10px;padding:9px 13px;background:#172033;color:#fff;cursor:pointer}.ghost{background:#e9eef8;color:#172033}.hidden{display:none!important}.empty{padding:28px;background:#fff;border:1px dashed #cbd5e1;border-radius:16px}
 footer{padding:35px 0;color:#64748b;font-size:13px}
 </style>
 </head>
-<body>
-<div class="wrap">
+<body><div class="wrap">
 <header class="hero">
-<div class="pill">NEWAPP</div>
+<span class="badge">NEWAPP · Independent catalogue</span>
 <h1>Singapore Education Programmes</h1>
-<p>Explore programmes by education pathway, level and subject. Curriculum and syllabus information will be progressively added and versioned.</p>
+<p>从教育体系 → 年级 → 科目 → syllabus → programme，逐层找到准确的课程入口。Singapore mainstream curriculum uses MOE/SEAB sources; international and enrichment pathways stay separate.</p>
 </header>
 
-<section class="section">
-<div class="top"><h2>Choose an education pathway</h2></div>
+<section id="frameworkSection" class="section">
+<div class="top"><h2>1 · Choose a pathway</h2></div>
 <div id="frameworks" class="grid"><p class="muted">Loading...</p></div>
 </section>
 
-<section id="levels" class="section">
-<div class="top"><h2 id="levelTitle">Levels</h2><button onclick="showFrameworks()">Back</button></div>
-<div id="levelGrid" class="grid"></div>
+<section id="levelSection" class="section hidden">
+<div class="top"><h2 id="levelTitle"></h2><button class="ghost" onclick="goHome()">Back</button></div>
+<div id="levels" class="grid"></div>
 </section>
 
-<footer>NEWAPP · Independent education programme catalogue · Not affiliated with MOE/SEAB.</footer>
+<section id="subjectSection" class="section hidden">
+<div class="top"><h2 id="subjectTitle"></h2><button class="ghost" onclick="backToLevels()">Back</button></div>
+<div id="subjects" class="grid"></div>
+</section>
+
+<section id="syllabusSection" class="section hidden">
+<div class="top"><h2 id="syllabusTitle"></h2><button class="ghost" onclick="backToSubjects()">Back</button></div>
+<div id="syllabuses" class="grid"></div>
+</section>
+
+<section id="programmeSection" class="section hidden">
+<div class="top"><h2 id="programmeTitle"></h2><button class="ghost" onclick="backToSyllabuses()">Back</button></div>
+<div id="programmes" class="grid"></div>
+</section>
+
+<footer>NEWAPP · Independent education programme catalogue · Not affiliated with MOE/SEAB. Sources are stored with each syllabus record so versions can be updated without breaking the catalogue.</footer>
 </div>
 <script>
 const SUPABASE_URL="https://givcabheseeeiwmahwbj.supabase.co";
-const SUPABASE_KEY="__PUBLISHABLE_KEY__";
+const SUPABASE_KEY="sb_publishable_6xwHhpBnijovn4zVZKVFTQ_SjYwqPA0";
+const state={framework:null,level:null,subject:null,syllabus:null};
 async function api(table,query=""){
  const r=await fetch(SUPABASE_URL+"/rest/v1/"+table+"?"+query,{headers:{apikey:SUPABASE_KEY,Authorization:"Bearer "+SUPABASE_KEY}});
- if(!r.ok) throw new Error(await r.text()); return r.json();
+ if(!r.ok)throw new Error(await r.text());return r.json();
 }
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));}
+function showOnly(id){["frameworkSection","levelSection","subjectSection","syllabusSection","programmeSection"].forEach(x=>document.getElementById(x).classList.add("hidden"));document.getElementById(id).classList.remove("hidden")}
+function crumbs(items){return '<div class="crumbs">'+items.map(x=>'<span class="crumb">'+esc(x)+'</span>').join("")+'</div>'}
 async function load(){
- const box=document.getElementById("frameworks");
  try{
-  const data=await api("curriculum_frameworks","select=id,code,name,description,sort_order&order=sort_order");
-  box.innerHTML=data.map(x=>`<article class="card" onclick="showLevels('${x.id}','${escapeHtml(x.name)}')"><h3>${escapeHtml(x.name)}</h3><p class="muted">${escapeHtml(x.description||"")}</p></article>`).join("");
- }catch(e){box.innerHTML='<p class="muted">Database connection is ready, but the public API key still needs to be configured.</p>';}
+  const data=await api("curriculum_frameworks","select=id,code,name,description,sort_order&is_active=eq.true&order=sort_order");
+  document.getElementById("frameworks").innerHTML=data.map(x=>'<article class="card" onclick="openFramework(\''+x.id+'\',\''+esc(x.name)+'\')"><h3>'+esc(x.name)+'</h3><p class="muted">'+esc(x.description||"")+'</p></article>').join("");
+ }catch(e){document.getElementById("frameworks").innerHTML='<div class="empty">Unable to connect to the curriculum database.</div>'}
 }
-async function showLevels(id,name){
- document.getElementById("frameworks").parentElement.style.display="none";
- document.getElementById("levels").style.display="block";
- document.getElementById("levelTitle").textContent=name;
- const box=document.getElementById("levelGrid");
+async function openFramework(id,name){
+ state.framework={id,name};showOnly("levelSection");document.getElementById("levelTitle").innerHTML="2 · "+esc(name);document.getElementById("levels").innerHTML='<p class="muted">Loading...</p>';
  try{
-  const data=await api("education_levels","select=id,code,name,level_group,sort_order&framework_id=eq."+encodeURIComponent(id)+"&order=sort_order");
-  box.innerHTML=data.map(x=>`<article class="card"><h3>${escapeHtml(x.name)}</h3><span class="pill">${escapeHtml(x.level_group)}</span></article>`).join("")||'<p class="muted">No levels added yet.</p>';
- }catch(e){box.innerHTML='<p class="muted">Unable to load levels.</p>';}
+  const data=await api("education_levels","select=id,code,name,level_group,sort_order&framework_id=eq."+encodeURIComponent(id)+"&is_active=eq.true&order=sort_order");
+  document.getElementById("levels").innerHTML=data.map(x=>'<article class="card" onclick="openLevel(\''+x.id+'\',\''+esc(x.name)+'\',\''+esc(x.code)+'\')"><h3>'+esc(x.name)+'</h3><span class="badge">'+esc(x.level_group)+'</span></article>').join("")||'<div class="empty">No levels yet.</div>';
+ }catch(e){document.getElementById("levels").innerHTML='<div class="empty">Unable to load levels.</div>'}
 }
-function showFrameworks(){document.getElementById("levels").style.display="none";document.getElementById("frameworks").parentElement.style.display="block";}
-function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));}
+async function openLevel(id,name,code){
+ state.level={id,name,code};showOnly("subjectSection");document.getElementById("subjectTitle").innerHTML="3 · "+esc(name);document.getElementById("subjects").innerHTML='<p class="muted">Loading...</p>';
+ try{
+  const data=await api("subject_levels","select=id,subject_id,subjects(id,code,name,short_name,category)&level_id=eq."+encodeURIComponent(id)+"&is_active=eq.true&order=subject_id");
+  const seen=new Set(),rows=data.filter(x=>x.subjects&&!seen.has(x.subjects.id)&&seen.add(x.subjects.id));
+  document.getElementById("subjects").innerHTML=rows.map(x=>'<article class="card" onclick="openSubject(\''+x.subjects.id+'\',\''+esc(x.subjects.name)+'\')"><h3>'+esc(x.subjects.name)+'</h3><span class="badge">'+esc(x.subjects.category||"Academic")+'</span></article>').join("")||'<div class="empty">No subjects mapped to this level yet.</div>';
+ }catch(e){document.getElementById("subjects").innerHTML='<div class="empty">Unable to load subjects.</div>'}
+}
+async function openSubject(id,name){
+ state.subject={id,name};showOnly("syllabusSection");document.getElementById("syllabusTitle").innerHTML="4 · "+esc(name);document.getElementById("syllabuses").innerHTML='<p class="muted">Loading...</p>';
+ try{
+  const data=await api("syllabuses","select=id,code,title,qualification,syllabus_year,source_authority,notes&subject_level_id=in.(select%20id%20from%20subject_levels%20where%20subject_id.eq."+encodeURIComponent(id)+"%20and%20level_id.eq."+encodeURIComponent(state.level.id)+")&is_active=eq.true&order=syllabus_year.desc,code");
+  document.getElementById("syllabuses").innerHTML=data.map(x=>'<article class="card" onclick="openSyllabus(\''+x.id+'\',\''+esc(x.title)+'\')"><h3>'+esc(x.title)+'</h3><span class="badge">'+esc(x.qualification||"Curriculum")+'</span> <span class="badge">'+esc(x.syllabus_year||"Current")+'</span><p class="muted small">'+esc(x.notes||"")+'</p><span class="tag">Source: '+esc(x.source_authority||"")+'</span></article>').join("")||'<div class="empty">This subject has no versioned syllabus record yet. The subject mapping is already ready for future syllabus updates.</div>';
+ }catch(e){document.getElementById("syllabuses").innerHTML='<div class="empty">Unable to load syllabus records.</div>'}
+}
+async function openSyllabus(id,title){
+ state.syllabus={id,title};showOnly("programmeSection");document.getElementById("programmeTitle").innerHTML="5 · "+esc(title);document.getElementById("programmes").innerHTML='<p class="muted">Loading...</p>';
+ try{
+  const data=await api("programmes","select=id,code,name,programme_type,description,source_authority,source_url&syllabus_id=eq."+encodeURIComponent(id)+"&is_public=eq.true&is_active=eq.true&order=name");
+  document.getElementById("programmes").innerHTML=data.map(x=>'<article class="card"><h3>'+esc(x.name)+'</h3><span class="badge">'+esc(x.programme_type)+'</span><p class="muted">'+esc(x.description||"")+'</p><span class="tag">'+esc(x.source_authority||"")+'</span></article>').join("")||'<div class="empty">Programme entry pending.</div>';
+ }catch(e){document.getElementById("programmes").innerHTML='<div class="empty">Unable to load programmes.</div>'}
+}
+function goHome(){state.framework=null;showOnly("frameworkSection")}
+function backToLevels(){openFramework(state.framework.id,state.framework.name)}
+function backToSubjects(){openLevel(state.level.id,state.level.name,state.level.code)}
+function backToSyllabuses(){openSubject(state.subject.id,state.subject.name)}
 load();
-</script>
-</body>
-</html>
+</script></body></html>
