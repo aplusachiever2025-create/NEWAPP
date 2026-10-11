@@ -9,9 +9,10 @@ const PARENT_HEADERS = ['id','created_at','status','contact_name','contact_phone
 const TUTOR_HEADERS = ['id','created_at','status','name','contact_phone','contact_email','whatsapp','level','subjects','rate','mode','regions','languages','experience','timeslots','bio'];
 const MATCH_HEADERS = ['id','created_at','parent_id','tutor_id','score','reason','status'];
 
-function doGet() {
-  return HtmlService.createHtmlOutputFromFile('index')
-    .setTitle('SG Tutor Match')
+function doGet(e) {
+  const page = e && e.parameter && e.parameter.page === 'admin' ? 'admin' : 'index';
+  return HtmlService.createHtmlOutputFromFile(page)
+    .setTitle(page === 'admin' ? 'SG Tutor Match Admin' : 'SG Tutor Match')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
