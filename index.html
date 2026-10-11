@@ -1,110 +1,53 @@
-<!-- NEWAPP GitHub Pages deployment trigger -->
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NEWAPP · Singapore Education Programmes</title>
-<meta name="description" content="Explore Singapore education programmes by pathway, level, subject and syllabus.">
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SG Tutor Match · 家长与导师配对</title>
 <style>
-:root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172033;background:#f6f8fc}
-*{box-sizing:border-box}body{margin:0}.wrap{max-width:1180px;margin:auto;padding:22px 18px}
-.hero{background:#172033;color:#fff;border-radius:26px;padding:38px 30px;margin:10px 0 24px}.hero h1{font-size:clamp(32px,6vw,58px);line-height:1.03;margin:10px 0}.hero p{color:#cbd5e1;max-width:760px;font-size:17px;line-height:1.65}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.card{background:#fff;border:1px solid #e4e9f2;border-radius:18px;padding:21px;cursor:pointer;transition:.2s}.card:hover{transform:translateY(-2px);box-shadow:0 12px 32px #17203314}.card h3{margin:0 0 8px}.muted{color:#64748b;line-height:1.55}.small{font-size:13px}.section{margin:25px 0}.top{display:flex;justify-content:space-between;gap:12px;align-items:center}.crumbs{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 18px}.crumb{padding:6px 10px;background:#e9eef8;border-radius:999px;font-size:12px;color:#334155}
-.badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#eef2ff;color:#334155;font-size:12px;margin:2px}.tag{display:inline-block;padding:5px 8px;border-radius:8px;background:#f1f5f9;color:#475569;font-size:11px;margin:3px 3px 0 0}
-button{border:0;border-radius:10px;padding:9px 13px;background:#172033;color:#fff;cursor:pointer}.ghost{background:#e9eef8;color:#172033}.hidden{display:none!important}.empty{padding:28px;background:#fff;border:1px dashed #cbd5e1;border-radius:16px}
-footer{padding:35px 0;color:#64748b;font-size:13px}
-</style>
-</head>
-<body><div class="wrap">
-<header class="hero">
-<span class="badge">NEWAPP · Independent catalogue</span>
-<h1>Singapore Education Programmes</h1>
-<p>从教育体系 → 年级 → 科目 → syllabus → programme，逐层找到准确的课程入口。Singapore mainstream curriculum uses MOE/SEAB sources; international and enrichment pathways stay separate.</p>
-</header>
-
-<section id="frameworkSection" class="section">
-<div class="top"><h2>1 · Choose a pathway</h2></div>
-<div id="frameworks" class="grid"><p class="muted">Loading...</p></div>
-</section>
-
-<section id="levelSection" class="section hidden">
-<div class="top"><h2 id="levelTitle"></h2><button class="ghost" onclick="goHome()">Back</button></div>
-<div id="levels" class="grid"></div>
-</section>
-
-<section id="subjectSection" class="section hidden">
-<div class="top"><h2 id="subjectTitle"></h2><button class="ghost" onclick="backToLevels()">Back</button></div>
-<div id="subjects" class="grid"></div>
-</section>
-
-<section id="syllabusSection" class="section hidden">
-<div class="top"><h2 id="syllabusTitle"></h2><button class="ghost" onclick="backToSubjects()">Back</button></div>
-<div id="syllabuses" class="grid"></div>
-</section>
-
-<section id="programmeSection" class="section hidden">
-<div class="top"><h2 id="programmeTitle"></h2><button class="ghost" onclick="backToSyllabuses()">Back</button></div>
-<div id="programmes" class="grid"></div>
-</section>
-
-<footer>NEWAPP · Independent education programme catalogue · Not affiliated with MOE/SEAB. Sources are stored with each syllabus record so versions can be updated without breaking the catalogue.</footer>
-</div>
-<script>
-const SUPABASE_URL="https://givcabheseeeiwmahwbj.supabase.co";
-const SUPABASE_KEY="sb_publishable_6xwHhpBnijovn4zVZKVFTQ_SjYwqPA0";
-const state={framework:null,level:null,subject:null,syllabus:null};
-async function api(table,query=""){
- const r=await fetch(SUPABASE_URL+"/rest/v1/"+table+"?"+query,{headers:{apikey:SUPABASE_KEY,Authorization:"Bearer "+SUPABASE_KEY}});
- if(!r.ok)throw new Error(await r.text());return r.json();
-}
-function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));}
-function showOnly(id){["frameworkSection","levelSection","subjectSection","syllabusSection","programmeSection"].forEach(x=>document.getElementById(x).classList.add("hidden"));document.getElementById(id).classList.remove("hidden")}
-function crumbs(items){return '<div class="crumbs">'+items.map(x=>'<span class="crumb">'+esc(x)+'</span>').join("")+'</div>'}
-async function load(){
- try{
-  const data=await api("curriculum_frameworks","select=id,code,name,description,sort_order&is_active=eq.true&order=sort_order");
-  document.getElementById("frameworks").innerHTML=data.map(x=>'<article class="card" onclick="openFramework(\''+x.id+'\',\''+esc(x.name)+'\')"><h3>'+esc(x.name)+'</h3><p class="muted">'+esc(x.description||"")+'</p></article>').join("");
- }catch(e){document.getElementById("frameworks").innerHTML='<div class="empty">Unable to connect to the curriculum database.</div>'}
-}
-async function openFramework(id,name){
- state.framework={id,name};showOnly("levelSection");document.getElementById("levelTitle").innerHTML="2 · "+esc(name);document.getElementById("levels").innerHTML='<p class="muted">Loading...</p>';
- try{
-  const data=await api("education_levels","select=id,code,name,level_group,sort_order&framework_id=eq."+encodeURIComponent(id)+"&is_active=eq.true&order=sort_order");
-  document.getElementById("levels").innerHTML=data.map(x=>'<article class="card" onclick="openLevel(\''+x.id+'\',\''+esc(x.name)+'\',\''+esc(x.code)+'\')"><h3>'+esc(x.name)+'</h3><span class="badge">'+esc(x.level_group)+'</span></article>').join("")||'<div class="empty">No levels yet.</div>';
- }catch(e){document.getElementById("levels").innerHTML='<div class="empty">Unable to load levels.</div>'}
-}
-async function openLevel(id,name,code){
- state.level={id,name,code};showOnly("subjectSection");document.getElementById("subjectTitle").innerHTML="3 · "+esc(name);document.getElementById("subjects").innerHTML='<p class="muted">Loading...</p>';
- try{
-  // Load the mapping table and subject catalogue separately. This avoids nested PostgREST
-  // relation/RLS responses hiding the subject object even when the mapping rows exist.
-  const mappings=await api("subject_levels","select=id,subject_id&level_id=eq."+encodeURIComponent(id)+"&is_active=eq.true&order=subject_id");
-  const ids=[...new Set(mappings.map(x=>x.subject_id).filter(Boolean))];
-  if(!ids.length){
-   document.getElementById("subjects").innerHTML='<div class="empty">No subjects mapped to this level yet.</div>';
-   return;
-  }
-  const data=await api("subjects","select=id,code,name,short_name,category&is_active=eq.true&id=in.("+ids.join(",")+")&order=name");
-  document.getElementById("subjects").innerHTML=data.map(x=>'<article class="card" onclick="openSubject(\\''+x.id+'\\',\\''+esc(x.name)+'\\')"><h3>'+esc(x.name)+'</h3><span class="badge">'+esc(x.category||"Academic")+'</span></article>').join("")||'<div class="empty">No active subjects found.</div>';
- }catch(e){console.error("Subject loading failed:",e);document.getElementById("subjects").innerHTML='<div class="empty">Unable to load subjects. Please refresh and try again.</div>'}
-}
-async function openSubject(id,name){
- state.subject={id,name};showOnly("syllabusSection");document.getElementById("syllabusTitle").innerHTML="4 · "+esc(name);document.getElementById("syllabuses").innerHTML='<p class="muted">Loading...</p>';
- try{
-  const data=await api("syllabuses","select=id,code,title,qualification,syllabus_year,source_authority,notes,subject_levels!inner(subject_id,level_id)&subject_levels.subject_id=eq."+encodeURIComponent(id)+"&subject_levels.level_id=eq."+encodeURIComponent(state.level.id)+"&is_active=eq.true&order=syllabus_year.desc,code");
-  document.getElementById("syllabuses").innerHTML=data.map(x=>'<article class="card" onclick="openSyllabus(\''+x.id+'\',\''+esc(x.title)+'\')"><h3>'+esc(x.title)+'</h3><span class="badge">'+esc(x.qualification||"Curriculum")+'</span> <span class="badge">'+esc(x.syllabus_year||"Current")+'</span><p class="muted small">'+esc(x.notes||"")+'</p><span class="tag">Source: '+esc(x.source_authority||"")+'</span></article>').join("")||'<div class="empty">This subject has no versioned syllabus record yet. The subject mapping is already ready for future syllabus updates.</div>';
- }catch(e){document.getElementById("syllabuses").innerHTML='<div class="empty">Unable to load syllabus records.</div>'}
-}
-async function openSyllabus(id,title){
- state.syllabus={id,title};showOnly("programmeSection");document.getElementById("programmeTitle").innerHTML="5 · "+esc(title);document.getElementById("programmes").innerHTML='<p class="muted">Loading...</p>';
- try{
-  const data=await api("programmes","select=id,code,name,programme_type,description,source_authority,source_url&syllabus_id=eq."+encodeURIComponent(id)+"&is_public=eq.true&is_active=eq.true&order=name");
-  document.getElementById("programmes").innerHTML=data.map(x=>'<article class="card"><h3>'+esc(x.name)+'</h3><span class="badge">'+esc(x.programme_type)+'</span><p class="muted">'+esc(x.description||"")+'</p><span class="tag">'+esc(x.source_authority||"")+'</span></article>').join("")||'<div class="empty">Programme entry pending.</div>';
- }catch(e){document.getElementById("programmes").innerHTML='<div class="empty">Unable to load programmes.</div>'}
-}
-function goHome(){state.framework=null;showOnly("frameworkSection")}
-function backToLevels(){openFramework(state.framework.id,state.framework.name)}
-function backToSubjects(){openLevel(state.level.id,state.level.name,state.level.code)}
-function backToSyllabuses(){openSubject(state.subject.id,state.subject.name)}
-load();
+:root{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#182235;background:#f4f7fb}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1050px;margin:auto;padding:22px 16px 48px}.hero{padding:30px;border-radius:24px;background:linear-gradient(130deg,#15243b,#285b75);color:white}.hero h1{font-size:clamp(30px,5vw,46px);margin:8px 0}.hero p{line-height:1.65;color:#dbeafe;max-width:700px}.brand{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#bfdbfe}.tabs{display:flex;gap:8px;margin:20px 0;flex-wrap:wrap}.tabs button,.btn{border:0;border-radius:10px;padding:12px 16px;background:#183b56;color:white;cursor:pointer;font-weight:650}.tabs button{background:#e2eaf2;color:#183b56}.tabs button.active{background:#183b56;color:white}.panel{background:#fff;border:1px solid #e1e8f0;border-radius:18px;padding:22px;margin:14px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.field{display:flex;flex-direction:column;gap:6px;margin:8px 0}.field label{font-size:13px;font-weight:650;color:#334155}.field input,.field select,.field textarea{width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:10px;font:inherit;background:white}.field textarea{min-height:90px;resize:vertical}.note{font-size:13px;line-height:1.6;color:#64748b}.privacy{font-weight:750;color:#182235}.hidden{display:none!important}.notice{padding:13px 15px;background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;color:#9a3412;line-height:1.5;margin-top:15px}.success{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}.foot{padding:24px 4px;color:#64748b;font-size:12px}
+</style></head><body><main class="wrap">
+<header class="hero"><div class="brand">APLUS · SG TUTOR MATCH</div><h1>找到适合的导师</h1><p>提交家长补习需求或导师资料，由平台统一核对科目、年级、预算与授课安排，再进行人工确认。</p></header>
+<div class="notice" id="deployNotice">此仓库包含新系统前端与 Apps Script 后端源码。要启用真实提交，请先部署 Apps Script Web App，并将本页面作为 Apps Script HTML 文件使用；直接打开 GitHub Pages 时，Google Apps Script 的专属调用接口不可用。</div>
+<div class="tabs"><button id="parentTab" class="active" onclick="showForm('parent')">我是家长</button><button id="tutorTab" onclick="showForm('tutor')">我是导师</button></div>
+<section class="panel" id="parentPanel"><h2>家长补习需求</h2><form id="parentForm" onsubmit="submitParent(event)">
+<div class="grid">
+<div class="field"><label>家长姓名 *</label><input name="contact_name" required maxlength="100"></div>
+<div class="field"><label>联系电话 *</label><input name="contact_phone" required maxlength="40"></div>
+<div class="field"><label>微信号码</label><input name="contact_wechat" maxlength="100"></div>
+<div class="field"><label>WhatsApp</label><input name="contact_whatsapp" maxlength="100"></div>
+<div class="field"><label>学生阶段 *</label><select name="level" required><option value="">请选择</option><option>Primary 1</option><option>Primary 2</option><option>Primary 3</option><option>Primary 4</option><option>Primary 5</option><option>Primary 6</option><option>Secondary 1</option><option>Secondary 2</option><option>Secondary 3</option><option>Secondary 4</option><option>IP 1</option><option>IP 2</option><option>IP 3</option><option>IP 4</option><option>JC 1</option><option>JC 2</option><option>IB</option><option>IGCSE</option><option>Other</option></select></div>
+<div class="field"><label>科目（统一标准名称） *</label><select name="subject" required><option value="">请选择</option><option>English</option><option>Chinese</option><option>Mathematics</option><option>E-Math</option><option>A-Math</option><option>Science</option><option>Combined Science</option><option>Physics</option><option>Chemistry</option><option>Biology</option><option>H2 Physics</option><option>H2 Chemistry</option><option>H2 Biology</option><option>Economics</option><option>Social Studies</option><option>Geography</option><option>History</option><option>Literature</option><option>Other</option></select></div>
+<div class="field"><label>预算（每小时） *</label><select name="budget" required><option value="">请选择</option><option>$30–40/hr</option><option>$40–60/hr</option><option>$60–80/hr</option><option>$80–100/hr</option><option>$100–120/hr</option><option>$120–150/hr</option><option>$150+/hr</option></select></div>
+<div class="field"><label>授课模式 *</label><select name="mode" required><option value="">请选择</option><option>老师上门</option><option>学生上门</option><option>线上</option><option>均可</option></select></div>
+<div class="field"><label>地区 / 邮区 *</label><input name="region" required maxlength="120" placeholder="例如：Woodlands / 730xxx"></div>
+<div class="field"><label>每周频率</label><select name="frequency"><option>每周一次</option><option>每周两次</option><option>每周三次或以上</option><option>灵活</option></select></div>
+<div class="field"><label>每次课时</label><select name="duration"><option>1 小时</option><option>1.5 小时</option><option>2 小时</option><option>其他</option></select></div>
+<div class="field"><label>方便时间</label><input name="timeslot" maxlength="200" placeholder="例如：平日放学后"></div>
+<div class="field"><label>目标</label><select name="goal"><option>提升成绩</option><option>考试冲刺</option><option>巩固基础</option><option>长期辅导</option><option>其他</option></select></div>
+</div><div class="field"><label>补充说明</label><textarea name="notes" maxlength="1500"></textarea></div>
+<p class="note privacy">联系方式仅供 SG Tutor Match 平台撮合使用，不公开给其他家长或老师。</p>
+<button class="btn" type="submit">提交家长需求</button><p id="parentMsg" class="note" aria-live="polite"></p></form></section>
+<section class="panel hidden" id="tutorPanel"><h2>导师资料登记</h2><form id="tutorForm" onsubmit="submitTutor(event)">
+<div class="grid">
+<div class="field"><label>导师姓名 *</label><input name="name" required maxlength="100"></div>
+<div class="field"><label>联系电话 *</label><input name="contact_phone" required maxlength="40"></div>
+<div class="field"><label>邮箱</label><input name="contact_email" type="email" maxlength="150"></div>
+<div class="field"><label>WhatsApp</label><input name="whatsapp" maxlength="100"></div>
+<div class="field"><label>授课阶段 *</label><select name="level" required><option value="">请选择</option><option>Primary 1–6</option><option>Secondary 1–4</option><option>IP 1–4</option><option>JC 1–2</option><option>IB</option><option>IGCSE</option><option>Multiple levels</option></select></div>
+<div class="field"><label>教授科目（可写多个，以逗号分隔） *</label><input name="subjects" required maxlength="500" placeholder="例如：H2 Chemistry, Chemistry"></div>
+<div class="field"><label>每小时收费 *</label><select name="rate" required><option value="">请选择</option><option>$30–40/hr</option><option>$40–60/hr</option><option>$60–80/hr</option><option>$80–100/hr</option><option>$100–120/hr</option><option>$120–150/hr</option><option>$150+/hr</option></select></div>
+<div class="field"><label>授课模式 *</label><select name="mode" required><option value="">请选择</option><option>老师上门</option><option>学生上门</option><option>线上</option><option>均可</option></select></div>
+<div class="field"><label>可授课地区</label><input name="regions" maxlength="200"></div>
+<div class="field"><label>授课语言</label><input name="languages" maxlength="120" placeholder="例如：English, Chinese"></div>
+<div class="field"><label>教学经验</label><input name="experience" maxlength="200" placeholder="例如：5 years"></div>
+<div class="field"><label>可授课时间</label><input name="timeslots" maxlength="250"></div>
+</div><div class="field"><label>导师简介</label><textarea name="bio" maxlength="1500"></textarea></div>
+<p class="note privacy">联系方式仅供 SG Tutor Match 平台撮合使用，不公开给其他家长或老师。</p>
+<button class="btn" type="submit">提交导师资料</button><p id="tutorMsg" class="note" aria-live="polite"></p></form></section>
+<div class="foot">SG Tutor Match · 平台收集的联系资料仅用于撮合处理。请勿在公开网页展示家长或导师的私人联系方式。</div>
+</main><script>
+function showForm(which){const p=which==='parent';document.getElementById('parentPanel').classList.toggle('hidden',!p);document.getElementById('tutorPanel').classList.toggle('hidden',p);document.getElementById('parentTab').classList.toggle('active',p);document.getElementById('tutorTab').classList.toggle('active',!p)}
+function formObj(form){return Object.fromEntries(new FormData(form).entries())}
+function hasGas(){return typeof google!=='undefined'&&google.script&&google.script.run}
+function submitParent(e){e.preventDefault();const msg=document.getElementById('parentMsg');if(!hasGas()){msg.textContent='尚未连接 Apps Script。请先完成后端部署与授权，当前资料没有提交。';return}msg.textContent='正在提交…';google.script.run.withSuccessHandler(r=>{msg.textContent=r.message||'提交完成。';if(r.ok)e.target.reset()}).withFailureHandler(err=>{msg.textContent='提交失败：'+(err.message||err)}).submitPublicRequest('parent',formObj(e.target))}
+function submitTutor(e){e.preventDefault();const msg=document.getElementById('tutorMsg');if(!hasGas()){msg.textContent='尚未连接 Apps Script。请先完成后端部署与授权，当前资料没有提交。';return}msg.textContent='正在提交…';google.script.run.withSuccessHandler(r=>{msg.textContent=r.message||'提交完成。';if(r.ok)e.target.reset()}).withFailureHandler(err=>{msg.textContent='提交失败：'+(err.message||err)}).submitPublicRequest('tutor',formObj(e.target))}
+if(!hasGas())document.getElementById('deployNotice').textContent='部署提示：这是新的 SG Tutor Match 前端源码。直接在 GitHub Pages 打开时不会连接数据库，也不会保存表单；完成 Google Apps Script 部署并将此页面放入 Apps Script HTML Service 后才会启用真实提交。';
 </script></body></html>
